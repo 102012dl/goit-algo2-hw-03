@@ -1,0 +1,90 @@
+HW T 3 2 
+
+  Завдання 2. Порівняння ефективності OOBTree і словника для діапазонних запитів 
+
+!pip install BTrees
+
+import csv
+import random
+import timeit
+from BTrees.OOBTree import OOBTree
+
+# Генерація тестових даних (якщо файл CSV відсутній)
+def generate_data(num_items=10000):
+    items = []
+    random.seed(42)
+    for i in range(num_items):
+        item = {
+            "ID": i,
+            "Name": f"Product_{i}",
+            "Category": f"Category_{random.randint(1, 5)}",
+            "Price": round(random.uniform(10, 500), 2)
+        }
+        items.append(item)
+    return items
+
+# Створення структур
+oobtree = OOBTree()
+dict_store = {}
+
+# Функції додавання елементів у структури
+def add_item_to_tree(tree, item):
+    tree[item["ID"]] = item
+
+def add_item_to_dict(store, item):
+    store[item["ID"]] = item
+
+# Завантаження або генерація даних
+items = generate_data()
+
+# Додавання даних у структури
+for item in items:
+    add_item_to_tree(oobtree, item)
+    add_item_to_dict(dict_store, item)
+
+# Функція діапазонного запиту для OOBTree (ефективний доступ через items(min, max))
+def range_query_tree(tree, min_price, max_price):
+    return [item for _, item in tree.items() if min_price <= item["Price"] <= max_price]
+
+# Функція діапазонного запиту для dict (лінійний пошук)
+def range_query_dict(store, min_price, max_price):
+    return [item for item in store.values() if min_price <= item["Price"] <= max_price]
+
+# Вимірювання часу виконання
+min_price, max_price = 100, 200
+
+# OOBTree
+tree_time = timeit.timeit(
+    stmt=lambda: range_query_tree(oobtree, min_price, max_price),
+    number=100
+)
+
+# Dict
+dict_time = timeit.timeit(
+    stmt=lambda: range_query_dict(dict_store, min_price, max_price),
+    number=100
+)
+
+# Виведення результатів
+print(f"Total range_query time for OOBTree: {tree_time:.6f} seconds")
+print(f"Total range_query time for Dict: {dict_time:.6f} seconds")
+
+
+
+
+Total range_query time for OOBTree: 0.367561 seconds
+Total range_query time for Dict: 0.236563 seconds 
+
+
+
+
+Requirement already satisfied: BTrees in /usr/local/lib/python3.11/dist-packages (6.1)
+Requirement already satisfied: persistent>=4.1.0 in /usr/local/lib/python3.11/dist-packages (from BTrees) (6.1.1)
+Requirement already satisfied: zope.interface>=5.0.0 in /usr/local/lib/python3.11/dist-packages (from BTrees) (7.2)
+Requirement already satisfied: zope.deferredimport in /usr/local/lib/python3.11/dist-packages (from persistent>=4.1.0->BTrees) (5.0)
+Requirement already satisfied: cffi in /usr/local/lib/python3.11/dist-packages (from persistent>=4.1.0->BTrees) (1.17.1)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.11/dist-packages (from zope.interface>=5.0.0->BTrees) (75.2.0)
+Requirement already satisfied: pycparser in /usr/local/lib/python3.11/dist-packages (from cffi->persistent>=4.1.0->BTrees) (2.22)
+Requirement already satisfied: zope.proxy in /usr/local/lib/python3.11/dist-packages (from zope.deferredimport->persistent>=4.1.0->BTrees) (6.1)
+Total range_query time for OOBTree: 0.157523 seconds
+Total range_query time for Dict: 0.110475 seconds
